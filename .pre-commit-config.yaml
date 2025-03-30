@@ -7,4 +7,5 @@ repos:
     rev: v0.9.4
     hooks:
       - id: ruff  # linter
+        args: [ --fix ]
       - id: ruff-format  # formatter
