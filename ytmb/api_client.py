@@ -16,3 +16,8 @@ def get_all_playlists():
 def get_playlist_tracks(playlist_id):
     playlist = ytmusic.get_playlist(playlistId=playlist_id, limit=None)
     return playlist["tracks"]
+
+
+def get_album_year(id):
+    album = ytmusic.get_album(id)
+    return album["year"]
