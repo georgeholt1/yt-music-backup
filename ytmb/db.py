@@ -44,34 +44,39 @@ def store_track_from_playlist(
         for artist_data in track_data["artists"]:
             if artist_data["id"] is None:
                 failed = True
-        if track_data["album"] is None:
-            failed = True
         if failed:
             print(
                 f"Failed to add track. Dumping data.\nplaylist_data\n{playlist_data}\ntrack_data\n{track_data}"
             )
             return
 
+        # Check if album exists
+        if track_data["album"] is not None:
+            album_id = track_data["album"]["id"]
+            album_name = track_data["album"]["name"]
+            album_year = get_album_year(album_id)
+            album = session.query(Album).filter_by(ytmusic_id=album_id).first()
+        else:
+            album_id = 0
+            album_name = "No album"
+            album_year = 0
+            album = session.query(Album).filter_by(ytmusic_id=album_id).first()
+
         # Create new track
         track = Track(
             ytmusic_id=track_data["videoId"],
             name=track_data["title"],
-            album_id=track_data["album"]["id"],
+            album_id=album_id,
         )
         session.add(track)
-
-        # Check if album exists
-        album = (
-            session.query(Album).filter_by(ytmusic_id=track_data["album"]["id"]).first()
-        )
 
         # Create and add new album if it doesn't exist
         if not album:
             try:
                 album = Album(
-                    ytmusic_id=track_data["album"]["id"],
-                    name=track_data["album"]["name"],
-                    year=get_album_year(track_data["album"]["id"]),
+                    ytmusic_id=album_id,
+                    name=album_name,
+                    year=album_year,
                 )
                 session.add(album)
             except KeyError:
