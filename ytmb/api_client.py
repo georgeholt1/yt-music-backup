@@ -20,4 +20,8 @@ def get_playlist_tracks(playlist_id):
 
 def get_album_year(id):
     album = ytmusic.get_album(id)
-    return album["year"]
+    try:
+        year = album["year"]
+    except KeyError:
+        year = 0
+    return year
