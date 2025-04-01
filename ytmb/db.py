@@ -1,7 +1,16 @@
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
-from models import Base, Playlist, Track, Artist, TrackArtist, PlaylistTrack, Album
+from models import (
+    Base,
+    Playlist,
+    Track,
+    Artist,
+    TrackArtist,
+    PlaylistTrack,
+    Album,
+    UserSavedAlbum,
+)
 from config import DB_URI
 from api_client import get_album_year
 
@@ -61,17 +70,12 @@ def store_track_from_playlist(
 
         # Create and add new album if it doesn't exist
         if not album:
-            try:
-                album = Album(
-                    ytmusic_id=album_id,
-                    name=album_name,
-                    year=album_year,
-                )
-                session.add(album)
-            except KeyError:
-                print(
-                    f"Failed to add album. Dumping data.\nplaylist_data\n{playlist_data}\ntrack_data\n{track_data}"
-                )
+            album = Album(
+                ytmusic_id=album_id,
+                name=album_name,
+                year=album_year,
+            )
+            session.add(album)
 
         # Handle TrackArtist relationship
         for artist_data in track_data["artists"]:
@@ -82,7 +86,6 @@ def store_track_from_playlist(
                 if not artist:
                     # Create and add new artist
                     artist = Artist(ytmusic_id=artist_id, name=artist_data["name"])
-                    session.add(artist)
 
             else:
                 artist_id = 0
@@ -91,7 +94,8 @@ def store_track_from_playlist(
                 )
                 if not artist:
                     artist = Artist(ytmusic_id=artist_id, name=artist_data["name"])
-                    session.add(artist)
+
+            session.add(artist)
 
             # session.flush()  # Generate ID
 
@@ -120,6 +124,62 @@ def store_track_from_playlist(
             position=track_position_in_playlist,
         )
         session.add(playlist_track)
+
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+
+
+def store_user_saved_album(session, album_data):
+    # Check if album exists in albums table
+    if album_data["browseId"] is not None:
+        album_id = album_data["browseId"]
+        album_name = album_data["title"]
+        album_year = get_album_year(album_id)
+        album = session.query(Album).filter_by(ytmusic_id=album_id).first()
+    else:
+        album_id = 0
+        album_name = "No album"
+        album_year = 0
+        album = session.query(Album).filter_by(ytmusic_id=album_id).first()
+
+    # Create and add new album if it doesn't exist
+    if not album:
+        album = Album(ytmusic_id=album_id, name=album_name, year=album_year)
+        session.add(album)
+        session.commit()
+
+    album_id = album.id
+
+    # Check if album exists in user_saved_albums table
+    album = session.query(UserSavedAlbum).filter_by(album_id=album_id).first()
+
+    # Create and add new album if it doesn't exist
+    if not album:
+        album = UserSavedAlbum(
+            album_id=album_id,
+        )
+        session.add(album)
+
+    # Add artists if necessary
+    for artist_data in album_data["artists"]:
+        if artist_data["id"] is not None:
+            artist_id = artist_data["id"]
+            artist = session.query(Artist).filter_by(ytmusic_id=artist_id).first()
+            if not artist:
+                # Create and add new artist
+                artist = Artist(ytmusic_id=artist_id, name=artist_data["name"])
+                session.add(artist)
+
+        else:
+            artist_id = 0
+            artist = session.query(Artist).filter_by(name=artist_data["name"]).first()
+            if not artist:
+                artist = Artist(ytmusic_id=artist_id, name=artist_data["name"])
+                session.add(artist)
+
+        session.add(artist)
 
     try:
         session.commit()
