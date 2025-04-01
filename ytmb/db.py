@@ -39,17 +39,6 @@ def store_track_from_playlist(
     track = session.query(Track).filter_by(ytmusic_id=track_data["videoId"]).first()
 
     if not track:
-        # Check all necessary properties are valid
-        failed = False
-        for artist_data in track_data["artists"]:
-            if artist_data["id"] is None:
-                failed = True
-        if failed:
-            print(
-                f"Failed to add track. Dumping data.\nplaylist_data\n{playlist_data}\ntrack_data\n{track_data}"
-            )
-            return
-
         # Check if album exists
         if track_data["album"] is not None:
             album_id = track_data["album"]["id"]
@@ -87,24 +76,33 @@ def store_track_from_playlist(
         # Handle TrackArtist relationship
         for artist_data in track_data["artists"]:
             # Check if artist exists
-            artist = (
-                session.query(Artist).filter_by(ytmusic_id=artist_data["id"]).first()
-            )
+            if artist_data["id"] is not None:
+                artist_id = artist_data["id"]
+                artist = session.query(Artist).filter_by(ytmusic_id=artist_id).first()
+                if not artist:
+                    # Create and add new artist
+                    artist = Artist(ytmusic_id=artist_id, name=artist_data["name"])
+                    session.add(artist)
 
-            if not artist:
-                # Create and add new artist
-                artist = Artist(ytmusic_id=artist_data["id"], name=artist_data["name"])
-                session.add(artist)
-                session.flush()  # Generate ID
+            else:
+                artist_id = 0
+                artist = (
+                    session.query(Artist).filter_by(name=artist_data["name"]).first()
+                )
+                if not artist:
+                    artist = Artist(ytmusic_id=artist_id, name=artist_data["name"])
+                    session.add(artist)
+
+            # session.flush()  # Generate ID
 
             # Create TrackArtist relation if it doesn't exist
             if (
                 not session.query(TrackArtist)
-                .filter_by(artist_id=artist_data["id"], track_id=track_data["videoId"])
+                .filter_by(artist_id=artist.id, track_id=track_data["videoId"])
                 .first()
             ):
                 track_artist = TrackArtist(
-                    artist_id=artist_data["id"], track_id=track_data["videoId"]
+                    artist_id=artist.id, track_id=track_data["videoId"]
                 )
                 session.add(track_artist)
 
