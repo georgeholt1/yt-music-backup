@@ -40,7 +40,7 @@ def store_track_from_playlist(
 
     if not track:
         # Check if album exists
-        if track_data["album"] is not None:
+        if track_data["album"] is not None and track_data["album"]["id"] is not None:
             album_id = track_data["album"]["id"]
             album_name = track_data["album"]["name"]
             album_year = get_album_year(album_id)
