@@ -25,3 +25,7 @@ def get_album_year(id):
     except KeyError:
         year = 0
     return year
+
+
+def get_all_albums():
+    return ytmusic.get_library_albums(limit=None)
