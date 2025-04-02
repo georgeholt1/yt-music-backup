@@ -62,14 +62,6 @@ def store_track_from_playlist(
             album_year = 0
             album = session.query(Album).filter_by(ytmusic_id=album_id).first()
 
-        # Create new track
-        track = Track(
-            ytmusic_id=track_data["videoId"],
-            name=track_data["title"],
-            album_id=album_id,
-        )
-        session.add(track)
-
         # Create and add new album if it doesn't exist
         if not album:
             album = Album(
@@ -79,9 +71,18 @@ def store_track_from_playlist(
             )
             session.add(album)
 
+        session.commit()
+
+        # Create new track
+        track = Track(
+            ytmusic_id=track_data["videoId"],
+            name=track_data["title"],
+            album_id=album.id,
+        )
+        session.add(track)
+
         # Handle TrackArtist relationship
         for artist_data in track_data["artists"]:
-            # Check if artist exists
             if artist_data["id"] is not None:
                 artist_id = artist_data["id"]
                 artist = session.query(Artist).filter_by(ytmusic_id=artist_id).first()
