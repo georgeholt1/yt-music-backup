@@ -181,8 +181,6 @@ def store_user_saved_album(session, album_data):
                 artist = Artist(ytmusic_id=artist_id, name=artist_data["name"])
                 session.add(artist)
 
-        session.add(artist)
-
     try:
         session.commit()
     except IntegrityError:
