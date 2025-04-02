@@ -88,6 +88,7 @@ def store_track_from_playlist(
                 if not artist:
                     # Create and add new artist
                     artist = Artist(ytmusic_id=artist_id, name=artist_data["name"])
+                    session.add(artist)
 
             else:
                 artist_id = 0
@@ -96,8 +97,7 @@ def store_track_from_playlist(
                 )
                 if not artist:
                     artist = Artist(ytmusic_id=artist_id, name=artist_data["name"])
-
-            session.add(artist)
+                    session.add(artist)
 
             # session.flush()  # Generate ID
 
