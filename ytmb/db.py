@@ -200,8 +200,8 @@ def store_artist(session, artist_data):
 
     if not artist:
         artist = Artist(ytmusic_id=artist_id, name=artist_data["artist"])
+        session.add(artist)
 
-    session.add(artist)
     session.commit()
 
     return artist
