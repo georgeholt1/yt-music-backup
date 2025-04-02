@@ -29,3 +29,11 @@ def get_album_year(id):
 
 def get_all_albums():
     return ytmusic.get_library_albums(limit=None)
+
+
+def get_all_artists():
+    return ytmusic.get_library_artists(limit=None)
+
+
+def get_all_subscriptions():
+    return ytmusic.get_library_subscriptions(limit=None)
