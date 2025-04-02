@@ -8,3 +8,4 @@ test.ipynb
 
 .env
 ytmb.db
+ytmb.backup.db
