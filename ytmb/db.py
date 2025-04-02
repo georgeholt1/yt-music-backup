@@ -36,10 +36,11 @@ def store_playlists(session, playlists_data):
                 ytmusic_id=playlist_data["playlistId"], title=playlist_data["title"]
             )
             session.add(new_playlist)
-            try:
-                session.commit()
-            except IntegrityError:
-                session.rollback()
+
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
 
 
 def store_track_from_playlist(
