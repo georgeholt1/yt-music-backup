@@ -10,6 +10,7 @@ from models import (
     PlaylistTrack,
     Album,
     UserSavedAlbum,
+    UserSavedArtist,
 )
 from config import DB_URI
 from api_client import get_album_year
@@ -185,3 +186,35 @@ def store_user_saved_album(session, album_data):
         session.commit()
     except IntegrityError:
         session.rollback()
+
+
+def store_artist(session, artist_data):
+    if artist_data["browseId"] is not None:
+        artist_id = artist_data["browseId"]
+        artist = session.query(Artist).filter_by(ytmusic_id=artist_id).first()
+
+    else:
+        artist_id = 0
+        artist = session.query(Artist).filter_by(name=artist_data["artist"]).first()
+
+    if not artist:
+        artist = Artist(ytmusic_id=artist_id, name=artist_data["artist"])
+
+    session.add(artist)
+    session.commit()
+
+    return artist
+
+
+def store_subscribed_artist(session, artist_data):
+    artist = store_artist(session, artist_data)
+
+    artist_id = artist.id
+
+    artist = session.query(UserSavedArtist).filter_by(artist_id=artist_id).first()
+
+    if not artist:
+        artist = UserSavedArtist(artist_id=artist_id)
+        session.add(artist)
+
+    session.commit()
