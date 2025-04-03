@@ -24,6 +24,19 @@ def initialize_database():
 
 
 def store_playlists(session, playlists_data):
+    """Store playlist information in the database if it does not already exist.
+
+    Iterates through a list of playlist data, checks if each playlist is already
+    present in the database by querying for its YouTube Music ID, and adds to
+    the database if it is not. Commits changes.
+
+    Paramaters
+    ----------
+    session : sqlalchemy.orm.Session
+    playlists_data : list of dict
+        List containing playlist data, where each dictionary must include
+        `playlistId` and `title` keys.
+    """
     for playlist_data in playlists_data:
         exists = (
             session.query(Playlist)
@@ -44,6 +57,18 @@ def store_playlists(session, playlists_data):
 
 
 def store_albums_from_playlist(session, playlist):
+    """Store unique albums from a playlist in the database.
+
+    Extracts albums from playlist tracks and stores each unique album in the
+    database.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    playlist : dict
+        Dictionary containing playlist information, including a 'playlistId'
+        key.
+    """
     # Get all unique albums in playlist
     tracks = get_playlist_tracks(playlist["playlistId"])
     albums = [track["album"] for track in tracks]
@@ -55,6 +80,23 @@ def store_albums_from_playlist(session, playlist):
 
 
 def store_album(session, album_ytmusic_id, album_name):
+    """Store an album in the database if not already present.
+
+    Checks and stores an album by its YouTube Music ID and name.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    album_ytmusic_id : str or None
+        YouTube Music ID for the album.
+    album_name : str or None
+        Name of the album.
+
+    Returns
+    -------
+    Album
+        The album object stored in the database.
+    """
     if album_ytmusic_id is None or album_name is None:
         album_ytmusic_id = 0
         album_name = "No album"
@@ -70,6 +112,22 @@ def store_album(session, album_ytmusic_id, album_name):
 
 
 def store_album_from_track_data(session, track_data):
+    """Store album information extracted from track data in the database.
+
+    Extracts album information from track data and stores it using
+    `store_album`.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    track_data : dict
+        Dictionary containing track information, including `album` key.
+
+    Returns
+    -------
+    Album
+        The album object stored in the database.
+    """
     if track_data["album"] is not None and track_data["album"]["id"] is not None:
         album_ytmusic_id = track_data["album"]["id"]
         album_name = track_data["album"]["name"]
@@ -83,6 +141,23 @@ def store_album_from_track_data(session, track_data):
 
 
 def store_album_from_album_data(session, album_data):
+    """Store album information extracted from album data in the database.
+
+    Extracts album information from album data and stores it using
+    `store_album`.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    album_data : dict
+        Dictionary containing album information, must include `browseId` and
+        `title` keys.
+
+    Returns
+    -------
+    Album
+        The album object stored in the database.
+    """
     if album_data["browseId"] is not None:
         album_ytmusic_id = album_data["browseId"]
         album_name = album_data["title"]
@@ -98,6 +173,23 @@ def store_album_from_album_data(session, album_data):
 def store_track_from_playlist(
     session, playlist_data, track_data, track_position_in_playlist
 ):
+    """Store track and relationships from a playlist in the database.
+
+    Checks and stores track and related artist/album information in the
+    database, and handles PlaylistTrack relationships.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    playlist_data : dict
+        Dictionary containing playlist information, must include `playlistId`
+        key.
+    track_data : dict
+        Dictionary containing track information, must include `videoId`,
+        `title`, `album`, and `artists`.
+    track_position_in_playlist : int
+        Position of the track within the playlist.
+    """
     # Check if track exists
     track = session.query(Track).filter_by(ytmusic_id=track_data["videoId"]).first()
 
@@ -166,6 +258,17 @@ def store_track_from_playlist(
 
 
 def store_user_saved_album(session, album_data):
+    """Store user-saved album information in the database.
+
+    Stores album and associated artists in the user's saved albums.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    album_data : dict
+        Dictionary containing album information, including `browseId`, `title`,
+        and `artists`.
+    """
     album = store_album_from_album_data(session, album_data)
 
     album_id = album.id
@@ -204,6 +307,22 @@ def store_user_saved_album(session, album_data):
 
 
 def store_artist(session, artist_data):
+    """Store artist information in the database if not already present.
+
+    Checks and stores an artist by their YouTube Music ID or name.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    artist_data : dict
+        Dictionary containing artist information, including `browseId` and
+        `artist` keys.
+
+    Returns
+    -------
+    Artist
+        The artist object stored in the database.
+    """
     if artist_data["browseId"] is not None:
         artist_id = artist_data["browseId"]
         artist = session.query(Artist).filter_by(ytmusic_id=artist_id).first()
@@ -222,6 +341,18 @@ def store_artist(session, artist_data):
 
 
 def store_subscribed_artist(session, artist_data):
+    """Store subscribed artist information in the database.
+
+    Stores artist information using `store_artist` and links to the user's
+    subscribed artists.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    artist_data : dict
+        Dictionary containing artist information, including `browseId` and
+        `artist` keys.
+    """
     artist = store_artist(session, artist_data)
 
     artist_id = artist.id
