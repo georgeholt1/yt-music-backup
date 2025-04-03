@@ -13,7 +13,7 @@ from models import (
     UserSavedArtist,
 )
 from config import DB_URI
-from api_client import get_album_year
+from api_client import get_playlist_tracks
 
 engine = create_engine(DB_URI)
 Session = sessionmaker(bind=engine)
@@ -43,6 +43,58 @@ def store_playlists(session, playlists_data):
         session.rollback()
 
 
+def store_albums_from_playlist(session, playlist):
+    # Get all unique albums in playlist
+    tracks = get_playlist_tracks(playlist["playlistId"])
+    albums = [track["album"] for track in tracks]
+    albums = set(tuple(sorted(a.items())) for a in albums if a is not None)
+    albums = list(dict(a) for a in albums)
+
+    for album in albums:
+        store_album(session, album["id"], album["name"])
+
+
+def store_album(session, album_ytmusic_id, album_name):
+    if album_ytmusic_id is None or album_name is None:
+        album_ytmusic_id = 0
+        album_name = "No album"
+
+    album = session.query(Album).filter_by(ytmusic_id=album_ytmusic_id).first()
+
+    if not album:
+        album = Album(ytmusic_id=album_ytmusic_id, name=album_name)
+        session.add(album)
+        session.commit()
+
+    return album
+
+
+def store_album_from_track_data(session, track_data):
+    if track_data["album"] is not None and track_data["album"]["id"] is not None:
+        album_ytmusic_id = track_data["album"]["id"]
+        album_name = track_data["album"]["name"]
+    else:
+        album_ytmusic_id = 0
+        album_name = "No album"
+
+    album = store_album(session, album_ytmusic_id, album_name)
+
+    return album
+
+
+def store_album_from_album_data(session, album_data):
+    if album_data["browseId"] is not None:
+        album_ytmusic_id = album_data["browseId"]
+        album_name = album_data["title"]
+    else:
+        album_ytmusic_id = 0
+        album_name = "No album"
+
+    album = store_album(session, album_ytmusic_id, album_name)
+
+    return album
+
+
 def store_track_from_playlist(
     session, playlist_data, track_data, track_position_in_playlist
 ):
@@ -50,28 +102,7 @@ def store_track_from_playlist(
     track = session.query(Track).filter_by(ytmusic_id=track_data["videoId"]).first()
 
     if not track:
-        # Check if album exists
-        if track_data["album"] is not None and track_data["album"]["id"] is not None:
-            album_id = track_data["album"]["id"]
-            album_name = track_data["album"]["name"]
-            album_year = get_album_year(album_id)
-            album = session.query(Album).filter_by(ytmusic_id=album_id).first()
-        else:
-            album_id = 0
-            album_name = "No album"
-            album_year = 0
-            album = session.query(Album).filter_by(ytmusic_id=album_id).first()
-
-        # Create and add new album if it doesn't exist
-        if not album:
-            album = Album(
-                ytmusic_id=album_id,
-                name=album_name,
-                year=album_year,
-            )
-            session.add(album)
-
-        session.commit()
+        album = store_album_from_track_data(session, track_data)
 
         # Create new track
         track = Track(
@@ -135,23 +166,7 @@ def store_track_from_playlist(
 
 
 def store_user_saved_album(session, album_data):
-    # Check if album exists in albums table
-    if album_data["browseId"] is not None:
-        album_id = album_data["browseId"]
-        album_name = album_data["title"]
-        album_year = get_album_year(album_id)
-        album = session.query(Album).filter_by(ytmusic_id=album_id).first()
-    else:
-        album_id = 0
-        album_name = "No album"
-        album_year = 0
-        album = session.query(Album).filter_by(ytmusic_id=album_id).first()
-
-    # Create and add new album if it doesn't exist
-    if not album:
-        album = Album(ytmusic_id=album_id, name=album_name, year=album_year)
-        session.add(album)
-        session.commit()
+    album = store_album_from_album_data(session, album_data)
 
     album_id = album.id
 

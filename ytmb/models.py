@@ -33,7 +33,6 @@ class Album(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     ytmusic_id = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=False)
-    year = Column(Integer)
 
     tracks = relationship("Track", backref="album")
 
