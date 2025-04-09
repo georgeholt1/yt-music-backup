@@ -214,24 +214,9 @@ def store_track_from_playlist(
         )
         session.add(track)
 
-        # Handle TrackArtist relationship
+        # Handle artists
         for artist_data in track_data["artists"]:
-            if artist_data["id"] is not None:
-                artist_id = artist_data["id"]
-                artist = session.query(Artist).filter_by(ytmusic_id=artist_id).first()
-                if not artist:
-                    # Create and add new artist
-                    artist = Artist(ytmusic_id=artist_id, name=artist_data["name"])
-                    session.add(artist)
-
-            else:
-                artist_id = 0
-                artist = (
-                    session.query(Artist).filter_by(name=artist_data["name"]).first()
-                )
-                if not artist:
-                    artist = Artist(ytmusic_id=artist_id, name=artist_data["name"])
-                    session.add(artist)
+            artist = store_artist(session, artist_data["name"], artist_data["id"])
 
             # Create TrackArtist relation if it doesn't exist
             if (
