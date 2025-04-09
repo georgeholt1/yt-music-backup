@@ -80,10 +80,14 @@ def store_albums_from_tracks(session, tracks):
         List containing tracks. For example, returned by
         api_client.get_playlist_tracks.
     """
-    # Get all unique albums in playlist
-    albums = [track["album"] for track in tracks]
-    albums = set(tuple(sorted(a.items())) for a in albums if a is not None)
-    albums = list(dict(a) for a in albums)
+    unique_albums = {
+        tuple(album.items())
+        for track in tracks
+        if track.get("album") is not None
+        for album in [track["album"]]
+    }
+
+    albums = [dict(album) for album in unique_albums]
 
     for album in albums:
         store_album(session, album["id"], album["name"])
