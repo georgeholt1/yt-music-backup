@@ -56,6 +56,16 @@ def store_playlists(session, playlists_data):
 
 
 def store_artists_from_tracks(session, tracks):
+    """Store unique artists from a list of tracks.
+
+    Extracts artists from tracks and stores each unique artist in the database.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    tracks : list
+        List containing tracks. For example, returned by
+        api_client.get_playlist_tracks."""
     unique_artists = {
         (artist["name"], artist["id"] if artist["id"] is not None else 0)
         for track in tracks
