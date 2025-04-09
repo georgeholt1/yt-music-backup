@@ -14,7 +14,7 @@ from db import (
     store_user_saved_album,
     store_artist,
     store_subscribed_artist,
-    store_albums_from_playlist,
+    store_albums_from_tracks,
 )
 
 
@@ -27,8 +27,8 @@ def main():
     store_playlists(session, all_playlists)
 
     for playlist in all_playlists:
-        store_albums_from_playlist(session, playlist)
         tracks = get_playlist_tracks(playlist["playlistId"])
+        store_albums_from_tracks(session, tracks)
         for i, track in enumerate(tqdm(tracks)):
             store_track_from_playlist(session, playlist, track, i)
 

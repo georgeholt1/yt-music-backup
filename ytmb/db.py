@@ -13,7 +13,6 @@ from models import (
     UserSavedArtist,
 )
 from config import DB_URI
-from api_client import get_playlist_tracks
 
 engine = create_engine(DB_URI)
 Session = sessionmaker(bind=engine)
@@ -56,21 +55,19 @@ def store_playlists(session, playlists_data):
         session.rollback()
 
 
-def store_albums_from_playlist(session, playlist):
-    """Store unique albums from a playlist in the database.
+def store_albums_from_tracks(session, tracks):
+    """Store unique albums from a list of tracks.
 
-    Extracts albums from playlist tracks and stores each unique album in the
-    database.
+    Extracts albums from tracks and stores each unique album in the database.
 
     Parameters
     ----------
     session : sqlalchemy.orm.Session
-    playlist : dict
-        Dictionary containing playlist information, including a 'playlistId'
-        key.
+    tracks : list
+        List containing tracks. For example, returned by
+        api_client.get_playlist_tracks.
     """
     # Get all unique albums in playlist
-    tracks = get_playlist_tracks(playlist["playlistId"])
     albums = [track["album"] for track in tracks]
     albums = set(tuple(sorted(a.items())) for a in albums if a is not None)
     albums = list(dict(a) for a in albums)
@@ -222,8 +219,6 @@ def store_track_from_playlist(
                 if not artist:
                     artist = Artist(ytmusic_id=artist_id, name=artist_data["name"])
                     session.add(artist)
-
-            # session.flush()  # Generate ID
 
             # Create TrackArtist relation if it doesn't exist
             if (
