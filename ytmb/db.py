@@ -55,6 +55,19 @@ def store_playlists(session, playlists_data):
         session.rollback()
 
 
+def store_artists_from_tracks(session, tracks):
+    unique_artists = {
+        (artist["name"], artist["id"] if artist["id"] is not None else 0)
+        for track in tracks
+        for artist in track["artists"]
+    }
+
+    artists = [{"name": name, "id": artist_id} for name, artist_id in unique_artists]
+
+    for artist in artists:
+        store_artist(session, artist["name"], artist["id"])
+
+
 def store_albums_from_tracks(session, tracks):
     """Store unique albums from a list of tracks.
 
@@ -301,10 +314,40 @@ def store_user_saved_album(session, album_data):
         session.rollback()
 
 
-def store_artist(session, artist_data):
+def store_artist(session, artist_name, artist_id):
     """Store artist information in the database if not already present.
 
-    Checks and stores an artist by their YouTube Music ID or name.
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    artist_name : str
+    artist_id : str
+        YTMusic artist id.
+
+    Returns
+    -------
+    Artist
+        The artist object stored in the database.
+    """
+    if artist_id is not None and artist_id != 0:
+        artist = session.query(Artist).filter_by(ytmusic_id=artist_id).first()
+
+    else:
+        artist_id = 0
+        artist = session.query(Artist).filter_by(name=artist_name).first()
+
+    if not artist:
+        artist = Artist(ytmusic_id=artist_id, name=artist_name)
+        session.add(artist)
+
+    session.commit()
+
+    return artist
+
+
+def store_artist_from_artist_data(session, artist_data):
+    """Store artist information in the database using artist data retrieved
+    using ytmusic api.
 
     Parameters
     ----------
@@ -318,19 +361,7 @@ def store_artist(session, artist_data):
     Artist
         The artist object stored in the database.
     """
-    if artist_data["browseId"] is not None:
-        artist_id = artist_data["browseId"]
-        artist = session.query(Artist).filter_by(ytmusic_id=artist_id).first()
-
-    else:
-        artist_id = 0
-        artist = session.query(Artist).filter_by(name=artist_data["artist"]).first()
-
-    if not artist:
-        artist = Artist(ytmusic_id=artist_id, name=artist_data["artist"])
-        session.add(artist)
-
-    session.commit()
+    artist = store_artist(session, artist_data["artist"], artist_data["browseId"])
 
     return artist
 
@@ -348,7 +379,7 @@ def store_subscribed_artist(session, artist_data):
         Dictionary containing artist information, including `browseId` and
         `artist` keys.
     """
-    artist = store_artist(session, artist_data)
+    artist = store_artist_from_artist_data(session, artist_data)
 
     artist_id = artist.id
 

@@ -12,9 +12,10 @@ from db import (
     store_playlists,
     store_track_from_playlist,
     store_user_saved_album,
-    store_artist,
+    store_artist_from_artist_data,
     store_subscribed_artist,
     store_albums_from_tracks,
+    store_artists_from_tracks,
 )
 
 
@@ -28,6 +29,7 @@ def main():
 
     for playlist in all_playlists:
         tracks = get_playlist_tracks(playlist["playlistId"])
+        store_artists_from_tracks(session, tracks)
         store_albums_from_tracks(session, tracks)
         for i, track in enumerate(tqdm(tracks)):
             store_track_from_playlist(session, playlist, track, i)
@@ -38,7 +40,7 @@ def main():
 
     all_artists = get_all_artists()
     for artist in tqdm(all_artists):
-        store_artist(session, artist)
+        store_artist_from_artist_data(session, artist)
 
     all_subscriptions = get_all_subscriptions()
     for subscription in tqdm(all_subscriptions):
