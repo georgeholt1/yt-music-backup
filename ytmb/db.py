@@ -10,7 +10,6 @@ from models import (
     PlaylistTrack,
     Album,
     UserSavedAlbum,
-    UserSavedArtist,
 )
 from config import DB_URI
 
@@ -313,7 +312,7 @@ def store_user_saved_album(session, album_data):
         session.rollback()
 
 
-def store_artist(session, artist_name, artist_id):
+def store_artist(session, artist_name, artist_id, user_saved=False):
     """Store artist information in the database if not already present.
 
     Parameters
@@ -322,6 +321,9 @@ def store_artist(session, artist_name, artist_id):
     artist_name : str
     artist_id : str
         YTMusic artist id.
+    user_saved : bool, optional
+        Boolean label to use for the `user_saved` column of the `artists` table.
+        Defaults to False.
 
     Returns
     -------
@@ -335,16 +337,20 @@ def store_artist(session, artist_name, artist_id):
         artist_id = 0
         artist = session.query(Artist).filter_by(name=artist_name).first()
 
+    # Add the artist if necessary
     if not artist:
-        artist = Artist(ytmusic_id=artist_id, name=artist_name)
+        artist = Artist(ytmusic_id=artist_id, name=artist_name, user_saved=user_saved)
         session.add(artist)
+    # Update the user_saved info if necessary
+    elif user_saved and not artist.user_saved:
+        artist.user_saved = True
 
     session.commit()
 
     return artist
 
 
-def store_artist_from_artist_data(session, artist_data):
+def store_artist_from_artist_data(session, artist_data, user_saved=False):
     """Store artist information in the database using artist data retrieved
     using ytmusic api.
 
@@ -354,38 +360,17 @@ def store_artist_from_artist_data(session, artist_data):
     artist_data : dict
         Dictionary containing artist information, including `browseId` and
         `artist` keys.
+    user_saved : bool, optional
+        Boolean label to use for the `user_saved` column of the `artists` table.
+        Defaults to False.
 
     Returns
     -------
     Artist
         The artist object stored in the database.
     """
-    artist = store_artist(session, artist_data["artist"], artist_data["browseId"])
+    artist = store_artist(
+        session, artist_data["artist"], artist_data["browseId"], user_saved=user_saved
+    )
 
     return artist
-
-
-def store_subscribed_artist(session, artist_data):
-    """Store subscribed artist information in the database.
-
-    Stores artist information using `store_artist` and links to the user's
-    subscribed artists.
-
-    Parameters
-    ----------
-    session : sqlalchemy.orm.Session
-    artist_data : dict
-        Dictionary containing artist information, including `browseId` and
-        `artist` keys.
-    """
-    artist = store_artist_from_artist_data(session, artist_data)
-
-    artist_id = artist.id
-
-    artist = session.query(UserSavedArtist).filter_by(artist_id=artist_id).first()
-
-    if not artist:
-        artist = UserSavedArtist(artist_id=artist_id)
-        session.add(artist)
-
-    session.commit()

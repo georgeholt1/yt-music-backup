@@ -13,7 +13,6 @@ from db import (
     store_track_from_playlist,
     store_user_saved_album,
     store_artist_from_artist_data,
-    store_subscribed_artist,
     store_albums_from_tracks,
     store_artists_from_tracks,
 )
@@ -45,7 +44,7 @@ def main():
     all_subscriptions = get_all_subscriptions()
     for subscription in tqdm(all_subscriptions):
         if subscription["type"] == "artist":
-            store_subscribed_artist(session, subscription)
+            store_artist_from_artist_data(session, subscription, user_saved=True)
 
     session.close()
 

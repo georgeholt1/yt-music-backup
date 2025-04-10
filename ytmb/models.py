@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -11,6 +11,7 @@ class Artist(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     ytmusic_id = Column(String, nullable=False)
     name = Column(String, nullable=False)
+    user_saved = Column(Boolean, nullable=False, default=False)
 
     tracks = relationship("TrackArtist", back_populates="artist")
 
@@ -70,13 +71,6 @@ class PlaylistTrack(Base):
 
     playlist = relationship("Playlist", back_populates="playlist_tracks")
     track = relationship("Track", back_populates="playlist_tracks")
-
-
-class UserSavedArtist(Base):
-    __tablename__ = "user_saved_artists"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    artist_id = Column(Integer, ForeignKey("artists.id"), nullable=False)
 
 
 class UserSavedAlbum(Base):
