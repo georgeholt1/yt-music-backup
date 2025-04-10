@@ -34,6 +34,7 @@ class Album(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     ytmusic_id = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=False)
+    user_saved = Column(Boolean, nullable=False, default=False)
 
     tracks = relationship("Track", backref="album")
 
@@ -71,10 +72,3 @@ class PlaylistTrack(Base):
 
     playlist = relationship("Playlist", back_populates="playlist_tracks")
     track = relationship("Track", back_populates="playlist_tracks")
-
-
-class UserSavedAlbum(Base):
-    __tablename__ = "user_saved_albums"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    album_id = Column(Integer, ForeignKey("albums.id"), nullable=False)

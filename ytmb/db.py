@@ -9,7 +9,6 @@ from models import (
     TrackArtist,
     PlaylistTrack,
     Album,
-    UserSavedAlbum,
 )
 from config import DB_URI
 
@@ -102,7 +101,7 @@ def store_albums_from_tracks(session, tracks):
         store_album(session, album["id"], album["name"])
 
 
-def store_album(session, album_ytmusic_id, album_name):
+def store_album(session, album_ytmusic_id, album_name, user_saved=False):
     """Store an album in the database if not already present.
 
     Checks and stores an album by its YouTube Music ID and name.
@@ -114,6 +113,9 @@ def store_album(session, album_ytmusic_id, album_name):
         YouTube Music ID for the album.
     album_name : str or None
         Name of the album.
+    user_saved : bool, optional
+        Boolean label to use for the `user_saved` column of the `albums` table.
+        Defaults to False.
 
     Returns
     -------
@@ -127,9 +129,14 @@ def store_album(session, album_ytmusic_id, album_name):
     album = session.query(Album).filter_by(ytmusic_id=album_ytmusic_id).first()
 
     if not album:
-        album = Album(ytmusic_id=album_ytmusic_id, name=album_name)
+        album = Album(
+            ytmusic_id=album_ytmusic_id, name=album_name, user_saved=user_saved
+        )
         session.add(album)
-        session.commit()
+    elif user_saved and not album.user_saved:
+        album.user_saved = True
+
+    session.commit()
 
     return album
 
@@ -163,7 +170,7 @@ def store_album_from_track_data(session, track_data):
     return album
 
 
-def store_album_from_album_data(session, album_data):
+def store_album_from_album_data(session, album_data, user_saved=False):
     """Store album information extracted from album data in the database.
 
     Extracts album information from album data and stores it using
@@ -175,6 +182,9 @@ def store_album_from_album_data(session, album_data):
     album_data : dict
         Dictionary containing album information, must include `browseId` and
         `title` keys.
+    user_saved : bool, optional
+        Boolean label to use for the `user_saved` column of the `albums` table.
+        Defaults to False.
 
     Returns
     -------
@@ -188,7 +198,7 @@ def store_album_from_album_data(session, album_data):
         album_ytmusic_id = 0
         album_name = "No album"
 
-    album = store_album(session, album_ytmusic_id, album_name)
+    album = store_album(session, album_ytmusic_id, album_name, user_saved=user_saved)
 
     return album
 
@@ -275,36 +285,10 @@ def store_user_saved_album(session, album_data):
         Dictionary containing album information, including `browseId`, `title`,
         and `artists`.
     """
-    album = store_album_from_album_data(session, album_data)
+    store_album_from_album_data(session, album_data)
 
-    album_id = album.id
-
-    # Check if album exists in user_saved_albums table
-    album = session.query(UserSavedAlbum).filter_by(album_id=album_id).first()
-
-    # Create and add new album if it doesn't exist
-    if not album:
-        album = UserSavedAlbum(
-            album_id=album_id,
-        )
-        session.add(album)
-
-    # Add artists if necessary
     for artist_data in album_data["artists"]:
-        if artist_data["id"] is not None:
-            artist_id = artist_data["id"]
-            artist = session.query(Artist).filter_by(ytmusic_id=artist_id).first()
-            if not artist:
-                # Create and add new artist
-                artist = Artist(ytmusic_id=artist_id, name=artist_data["name"])
-                session.add(artist)
-
-        else:
-            artist_id = 0
-            artist = session.query(Artist).filter_by(name=artist_data["name"]).first()
-            if not artist:
-                artist = Artist(ytmusic_id=artist_id, name=artist_data["name"])
-                session.add(artist)
+        store_artist(session, artist_data["name"], artist_data["id"])
 
     try:
         session.commit()
