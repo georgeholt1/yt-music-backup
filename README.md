@@ -26,7 +26,7 @@ cp .env.example .env
 
 Now modify the `OATH_JSON`, `CLIENT_ID` and `CLIENT_SECRET` values.
 
-The last piece of configuration is to set the path to the SQL database. Modify the `DB_URI` entry in `.env` accordingly.
+The last piece of configuration is to set the path to the SQL database. By default, this uses a `ytmb.db` file in the working directory. Modify the `DB_URI` entry in `.env` if necessary.
 
 ## Usage
 
