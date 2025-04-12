@@ -202,7 +202,7 @@ def store_track_from_playlist(
 
         # Handle artists
         for artist_data in track_data["artists"]:
-            artist = store_artist(session, artist_data["name"], artist_data["id"])
+            artist = store_artist(session, artist_data["name"])
 
             # Create TrackArtist relation if it doesn't exist
             if (
