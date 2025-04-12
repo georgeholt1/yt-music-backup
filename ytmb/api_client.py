@@ -1,5 +1,5 @@
 from ytmusicapi import YTMusic, OAuthCredentials
-from config import OATH_JSON, CLIENT_ID, CLIENT_SECRET
+from .config import OATH_JSON, CLIENT_ID, CLIENT_SECRET
 
 ytmusic = YTMusic(
     OATH_JSON,

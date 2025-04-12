@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
-from models import (
+from .models import (
     Base,
     Playlist,
     Track,
@@ -10,7 +10,7 @@ from models import (
     PlaylistTrack,
     Album,
 )
-from config import DB_URI
+from .config import DB_URI
 
 engine = create_engine(DB_URI)
 Session = sessionmaker(bind=engine)
