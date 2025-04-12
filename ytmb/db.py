@@ -334,8 +334,6 @@ def store_artist_from_artist_data(session, artist_data, user_saved=False):
     Artist
         The artist object stored in the database.
     """
-    artist = store_artist(
-        session, artist_data["artist"], artist_data["browseId"], user_saved=user_saved
-    )
+    artist = store_artist(session, artist_data["artist"], user_saved=user_saved)
 
     return artist
