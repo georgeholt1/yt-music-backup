@@ -248,7 +248,7 @@ def store_user_saved_album(session, album_data):
         Dictionary containing album information, including `browseId`, `title`,
         and `artists`.
     """
-    store_album_from_album_data(session, album_data)
+    store_album_from_album_data(session, album_data, user_saved=True)
 
     for artist_data in album_data["artists"]:
         store_artist(session, artist_data["name"])
