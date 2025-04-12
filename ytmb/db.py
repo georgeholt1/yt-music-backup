@@ -151,8 +151,7 @@ def store_album_from_album_data(session, album_data, user_saved=False):
     ----------
     session : sqlalchemy.orm.Session
     album_data : dict
-        Dictionary containing album information, must include `browseId` and
-        `title` keys.
+        Dictionary containing album information, must include `title` key.
     user_saved : bool, optional
         Boolean label to use for the `user_saved` column of the `albums` table.
         Defaults to False.
@@ -162,14 +161,12 @@ def store_album_from_album_data(session, album_data, user_saved=False):
     Album
         The album object stored in the database.
     """
-    if album_data["browseId"] is not None:
-        album_ytmusic_id = album_data["browseId"]
-        album_name = album_data["title"]
-    else:
-        album_ytmusic_id = 0
+    if album_data["title"] is None:
         album_name = "No album"
+    else:
+        album_name = album_data["title"]
 
-    album = store_album(session, album_ytmusic_id, album_name, user_saved=user_saved)
+    album = store_album(session, album_name, user_saved=user_saved)
 
     return album
 
