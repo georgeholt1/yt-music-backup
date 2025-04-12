@@ -89,16 +89,12 @@ def store_albums_from_tracks(session, tracks):
         store_album(session, album["id"], album["name"])
 
 
-def store_album(session, album_ytmusic_id, album_name, user_saved=False):
+def store_album(session, album_name, user_saved=False):
     """Store an album in the database if not already present.
-
-    Checks and stores an album by its YouTube Music ID and name.
 
     Parameters
     ----------
     session : sqlalchemy.orm.Session
-    album_ytmusic_id : str or None
-        YouTube Music ID for the album.
     album_name : str or None
         Name of the album.
     user_saved : bool, optional
@@ -110,16 +106,10 @@ def store_album(session, album_ytmusic_id, album_name, user_saved=False):
     Album
         The album object stored in the database.
     """
-    if album_ytmusic_id is None or album_name is None:
-        album_ytmusic_id = 0
-        album_name = "No album"
-
-    album = session.query(Album).filter_by(ytmusic_id=album_ytmusic_id).first()
+    album = session.query(Album).filter_by(name=album_name).first()
 
     if not album:
-        album = Album(
-            ytmusic_id=album_ytmusic_id, name=album_name, user_saved=user_saved
-        )
+        album = Album(name=album_name, user_saved=user_saved)
         session.add(album)
     elif user_saved and not album.user_saved:
         album.user_saved = True
