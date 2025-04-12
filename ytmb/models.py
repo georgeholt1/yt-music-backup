@@ -9,7 +9,6 @@ class Artist(Base):
     __tablename__ = "artists"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    ytmusic_id = Column(String, nullable=False)
     name = Column(String, nullable=False)
     user_saved = Column(Boolean, nullable=False, default=False)
 
@@ -20,7 +19,6 @@ class Track(Base):
     __tablename__ = "tracks"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    ytmusic_id = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=False)
     album_id = Column(Integer, ForeignKey("albums.id"), nullable=False)
 
@@ -32,7 +30,6 @@ class Album(Base):
     __tablename__ = "albums"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    ytmusic_id = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=False)
     user_saved = Column(Boolean, nullable=False, default=False)
 
@@ -43,7 +40,6 @@ class Playlist(Base):
     __tablename__ = "playlists"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    ytmusic_id = Column(String, unique=True, nullable=False)
     title = Column(String, nullable=False)
 
     playlist_tracks = relationship("PlaylistTrack", back_populates="playlist")
