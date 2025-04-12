@@ -35,16 +35,10 @@ def store_playlists(session, playlists_data):
         `playlistId` and `title` keys.
     """
     for playlist_data in playlists_data:
-        exists = (
-            session.query(Playlist)
-            .filter_by(ytmusic_id=playlist_data["playlistId"])
-            .first()
-        )
+        exists = session.query(Playlist).filter_by(title=playlist_data["title"]).first()
 
         if not exists:
-            new_playlist = Playlist(
-                ytmusic_id=playlist_data["playlistId"], title=playlist_data["title"]
-            )
+            new_playlist = Playlist(title=playlist_data["title"])
             session.add(new_playlist)
 
     try:
