@@ -302,6 +302,8 @@ def store_artist(session, artist_name, user_saved=False):
     # Update the user_saved info if necessary
     elif user_saved and not artist.user_saved:
         artist.user_saved = True
+    elif not user_saved and artist.user_saved:
+        artist.user_saved = False
 
     session.commit()
 
