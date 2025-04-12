@@ -35,6 +35,5 @@ After following the above setup, running YTMB is as simple as setting the enviro
 ```bash
 set -a
 source .env
-cd ytmb
-poetry run python main.py
+poetry run ytmb
 ```
