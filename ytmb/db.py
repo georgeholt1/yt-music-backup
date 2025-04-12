@@ -136,14 +136,7 @@ def store_album_from_track_data(session, track_data):
     Album
         The album object stored in the database.
     """
-    if track_data["album"] is not None and track_data["album"]["id"] is not None:
-        album_ytmusic_id = track_data["album"]["id"]
-        album_name = track_data["album"]["name"]
-    else:
-        album_ytmusic_id = 0
-        album_name = "No album"
-
-    album = store_album(session, album_ytmusic_id, album_name)
+    album = store_album(session, track_data["album"]["name"])
 
     return album
 
