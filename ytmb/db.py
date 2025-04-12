@@ -290,15 +290,13 @@ def store_user_saved_album(session, album_data):
         session.rollback()
 
 
-def store_artist(session, artist_name, artist_id, user_saved=False):
+def store_artist(session, artist_name, user_saved=False):
     """Store artist information in the database if not already present.
 
     Parameters
     ----------
     session : sqlalchemy.orm.Session
     artist_name : str
-    artist_id : str
-        YTMusic artist id.
     user_saved : bool, optional
         Boolean label to use for the `user_saved` column of the `artists` table.
         Defaults to False.
@@ -308,16 +306,11 @@ def store_artist(session, artist_name, artist_id, user_saved=False):
     Artist
         The artist object stored in the database.
     """
-    if artist_id is not None and artist_id != 0:
-        artist = session.query(Artist).filter_by(ytmusic_id=artist_id).first()
-
-    else:
-        artist_id = 0
-        artist = session.query(Artist).filter_by(name=artist_name).first()
+    artist = session.query(Artist).filter_by(name=artist_name).first()
 
     # Add the artist if necessary
     if not artist:
-        artist = Artist(ytmusic_id=artist_id, name=artist_name, user_saved=user_saved)
+        artist = Artist(name=artist_name, user_saved=user_saved)
         session.add(artist)
     # Update the user_saved info if necessary
     elif user_saved and not artist.user_saved:
