@@ -77,16 +77,11 @@ def store_albums_from_tracks(session, tracks):
         api_client.get_playlist_tracks.
     """
     unique_albums = {
-        tuple(album.items())
-        for track in tracks
-        if track.get("album") is not None
-        for album in [track["album"]]
+        track["album"]["name"] for track in tracks if track.get("album") is not None
     }
 
-    albums = [dict(album) for album in unique_albums]
-
-    for album in albums:
-        store_album(session, album["id"], album["name"])
+    for album in unique_albums:
+        store_album(session, album)
 
 
 def store_album(session, album_name, user_saved=False):
