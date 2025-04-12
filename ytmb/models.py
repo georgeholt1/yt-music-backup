@@ -20,6 +20,7 @@ class Track(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
+    ytmusic_id = Column(String, unique=True, nullable=False)
     album_id = Column(Integer, ForeignKey("albums.id"), nullable=False)
 
     artists = relationship("TrackArtist", back_populates="track")
