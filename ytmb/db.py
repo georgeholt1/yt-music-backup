@@ -58,16 +58,10 @@ def store_artists_from_tracks(session, tracks):
     tracks : list
         List containing tracks. For example, returned by
         api_client.get_playlist_tracks."""
-    unique_artists = {
-        (artist["name"], artist["id"] if artist["id"] is not None else 0)
-        for track in tracks
-        for artist in track["artists"]
-    }
+    unique_artists = {artist["name"] for track in tracks for artist in track["artists"]}
 
-    artists = [{"name": name, "id": artist_id} for name, artist_id in unique_artists]
-
-    for artist in artists:
-        store_artist(session, artist["name"], artist["id"])
+    for artist in unique_artists:
+        store_artist(session, artist["name"])
 
 
 def store_albums_from_tracks(session, tracks):
