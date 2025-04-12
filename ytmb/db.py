@@ -33,18 +33,34 @@ def store_playlists(session, playlists_data):
     playlists_data : list of dict
         List containing playlist data, where each dictionary must include
         `playlistId` and `title` keys.
+
+    Returns
+    -------
+    playlists : list of dict
+        List of playlist data. Each entry is a dict with keys "name",
+        "ytmusic_id" (playlistId) and "playlist_table_id" (id in playlist table
+        of database).
     """
+    playlists = []
     for playlist_data in playlists_data:
-        exists = session.query(Playlist).filter_by(title=playlist_data["title"]).first()
+        playlist = (
+            session.query(Playlist).filter_by(title=playlist_data["title"]).first()
+        )
 
-        if not exists:
-            new_playlist = Playlist(title=playlist_data["title"])
-            session.add(new_playlist)
+        if not playlist:
+            playlist = Playlist(title=playlist_data["title"])
+            session.add(playlist)
+            session.commit()
 
-    try:
-        session.commit()
-    except IntegrityError:
-        session.rollback()
+        playlists.append(
+            {
+                "name": playlist_data["title"],
+                "ytmusic_id": playlist_data["playlistId"],
+                "playlist_table_id": playlist.id,
+            }
+        )
+
+    return playlists
 
 
 def store_artists_from_tracks(session, tracks):
@@ -171,7 +187,7 @@ def store_album_from_album_data(session, album_data, user_saved=False):
 
 
 def store_track_from_playlist(
-    session, playlist_data, track_data, track_position_in_playlist
+    session, playlist_table_id, track_data, track_position_in_playlist
 ):
     """Store track and relationships from a playlist in the database.
 
@@ -181,9 +197,9 @@ def store_track_from_playlist(
     Parameters
     ----------
     session : sqlalchemy.orm.Session
-    playlist_data : dict
-        Dictionary containing playlist information, must include `playlistId`
-        key.
+    playlist_table_id : int
+        The unique integer ID of the playlist in the playlists tabls of the
+        database.
     track_data : dict
         Dictionary containing track information, must include `videoId`,
         `title`, `album`, and `artists`.
@@ -220,14 +236,12 @@ def store_track_from_playlist(
     # Handle PlaylistTrack relationship
     if (
         not session.query(PlaylistTrack)
-        .filter_by(
-            playlist_id=playlist_data["playlistId"], track_id=track_data["videoId"]
-        )
+        .filter_by(playlist_id=playlist_table_id, track_id=track.id)
         .first()
     ):
         playlist_track = PlaylistTrack(
-            playlist_id=playlist_data["playlistId"],
-            track_id=track_data["videoId"],
+            playlist_id=playlist_table_id,
+            track_id=track.id,
             position=track_position_in_playlist,
         )
         session.add(playlist_track)

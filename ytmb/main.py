@@ -22,16 +22,16 @@ def main():
     initialize_database()
     session = Session()
 
-    all_playlists = get_all_playlists()
+    playlists = get_all_playlists()
 
-    store_playlists(session, all_playlists)
+    playlists = store_playlists(session, playlists)
 
-    for playlist in all_playlists:
-        tracks = get_playlist_tracks(playlist["playlistId"])
+    for playlist in playlists:
+        tracks = get_playlist_tracks(playlist["ytmusic_id"])
         store_artists_from_tracks(session, tracks)
         store_albums_from_tracks(session, tracks)
         for i, track in enumerate(tqdm(tracks)):
-            store_track_from_playlist(session, playlist, track, i)
+            store_track_from_playlist(session, playlist["playlist_table_id"], track, i)
 
     all_albums = get_all_albums()
     for album in tqdm(all_albums):
