@@ -61,7 +61,7 @@ def store_artists_from_tracks(session, tracks):
     unique_artists = {artist["name"] for track in tracks for artist in track["artists"]}
 
     for artist in unique_artists:
-        store_artist(session, artist["name"])
+        store_artist(session, artist)
 
 
 def store_albums_from_tracks(session, tracks):
