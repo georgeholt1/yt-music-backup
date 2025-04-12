@@ -124,6 +124,8 @@ def store_album(session, album_name, user_saved=False):
         session.add(album)
     elif user_saved and not album.user_saved:
         album.user_saved = True
+    elif not user_saved and album.user_saved:
+        album.user_saved = False
 
     session.commit()
 
