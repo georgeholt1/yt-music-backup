@@ -131,7 +131,11 @@ def store_album_from_track_data(session, track_data):
     Album
         The album object stored in the database.
     """
-    album = store_album(session, track_data["album"]["name"])
+    if track_data["album"] is None:
+        album_name = "No album"
+    else:
+        album_name = track_data["album"]["name"]
+    album = store_album(session, album_name)
 
     return album
 
@@ -207,12 +211,10 @@ def store_track_from_playlist(
             # Create TrackArtist relation if it doesn't exist
             if (
                 not session.query(TrackArtist)
-                .filter_by(artist_id=artist.id, track_id=track_data["videoId"])
+                .filter_by(artist_id=artist.id, track_id=track.id)
                 .first()
             ):
-                track_artist = TrackArtist(
-                    artist_id=artist.id, track_id=track_data["videoId"]
-                )
+                track_artist = TrackArtist(artist_id=artist.id, track_id=track.id)
                 session.add(track_artist)
 
     # Handle PlaylistTrack relationship
