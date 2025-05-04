@@ -332,3 +332,15 @@ def store_artist_from_artist_data(session, artist_data, user_saved=False):
     artist = store_artist(session, artist_data["artist"], user_saved=user_saved)
 
     return artist
+
+
+def get_all_ytmusic_ids_in_tracks_table(session):
+    """Return a list of all ytmusic_id values in the tracks table.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    """
+    ytmusic_ids = session.query(Track.ytmusic_id).all()
+    ytmusic_ids_list = [ytmusic_id for (ytmusic_id,) in ytmusic_ids]
+    return ytmusic_ids_list
