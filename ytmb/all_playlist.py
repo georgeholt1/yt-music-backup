@@ -58,7 +58,7 @@ def get_ytmb_all_track_diff(session):
             session, YTMB_ALL_TITLE
         )
     else:
-        ytmb_all_track_ytmusic_ids
+        ytmb_all_track_ytmusic_ids = []
 
     track_diff = set(ytmusic_ids_in_database) - set(ytmb_all_track_ytmusic_ids)
 
