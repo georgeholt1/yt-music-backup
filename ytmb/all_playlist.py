@@ -1,4 +1,4 @@
-from ytmb.api_client import create_playlist
+from ytmb.api_client import create_playlist, add_tracks_to_playlist
 from ytmb.db import (
     get_all_ytmusic_ids_in_tracks_table,
     get_all_playlist_titles,
@@ -8,7 +8,7 @@ from ytmb.db import (
 YTMB_ALL_TITLE = "ytmb-all"
 
 
-def create_ytmb_all_playlist(playlists):
+def _create_ytmb_all_playlist(playlists):
     """Create ytmb-all playlist if it doesn't exist.
 
     Parameters
@@ -38,7 +38,7 @@ def create_ytmb_all_playlist(playlists):
     return playlist_id
 
 
-def get_ytmb_all_track_diff(session):
+def _get_ytmb_all_track_diff(session):
     """Get list of tracks in database that are not in ytmb-all playlist.
 
     Parameters
@@ -63,3 +63,20 @@ def get_ytmb_all_track_diff(session):
     track_diff = set(ytmusic_ids_in_database) - set(ytmb_all_track_ytmusic_ids)
 
     return list(track_diff)
+
+
+def handle_ytmb_all_playlist(playlists, session):
+    """Handle creation and modification of ytmb-all playlist.
+
+    - Creates ytmb-all playlist if it doesn't exist.
+    - Adds tracks that are in database but not in ytmb-all playlist.
+
+    Parameters
+    ----------
+    playlists : list
+        List of playlist dicts.
+    session : sqlalchemy.orm.Session
+    """
+    ytmb_all_playlist_id = _create_ytmb_all_playlist(playlists)
+    tracks_to_add = _get_ytmb_all_track_diff(session)
+    add_tracks_to_playlist(playlist_id=ytmb_all_playlist_id, tracks=tracks_to_add)
