@@ -56,3 +56,15 @@ def create_playlist(title, description):
         description=description,
     )
     return playlist_id
+
+
+def add_tracks_to_playlist(playlist_id, tracks):
+    """Add tracks to playlist
+
+    Parameters
+    ----------
+    playlist_id : str
+    tracks : list
+        List of videoIds of tracks to add.
+    """
+    ytmusic.add_playlist_items(playlistId=playlist_id, videoIds=tracks)
