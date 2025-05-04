@@ -63,9 +63,8 @@ def create_ytmb_all_playlist(playlists):
             description="Playlist automatically created by YTMB",
         )
     else:
-        for p in playlists:
-            if p["title"] == ytmb_all_title:
-                playlist_id = p["playlistId"]
-                break
+        playlist_id = next(
+            (p["playlistId"] for p in playlists if p["title"] == ytmb_all_title), None
+        )
 
     return playlist_id
