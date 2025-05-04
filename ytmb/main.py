@@ -1,3 +1,4 @@
+import argparse
 from tqdm import tqdm
 from ytmb.api_client import (
     get_all_playlists,
@@ -6,6 +7,7 @@ from ytmb.api_client import (
     get_all_artists,
     get_all_subscriptions,
 )
+from ytmb.all_playlist import handle_ytmb_all_playlist
 from ytmb.db import (
     Session,
     initialize_database,
@@ -19,6 +21,15 @@ from ytmb.db import (
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-a",
+        "--all-playlist",
+        action="store_true",
+        help="Create an amalgamation playlist of library music",
+    )
+    args = parser.parse_args()
+
     initialize_database()
     session = Session()
 
@@ -50,6 +61,10 @@ def main():
     for subscription in tqdm(all_subscriptions):
         if subscription["type"] == "artist":
             store_artist_from_artist_data(session, subscription, user_saved=True)
+
+    if args.all_playlist:
+        print("Handling all-playlist")
+        handle_ytmb_all_playlist(playlists, session)
 
     session.close()
 
