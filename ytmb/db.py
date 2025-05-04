@@ -344,3 +344,15 @@ def get_all_ytmusic_ids_in_tracks_table(session):
     ytmusic_ids = session.query(Track.ytmusic_id).all()
     ytmusic_ids_list = [ytmusic_id for (ytmusic_id,) in ytmusic_ids]
     return ytmusic_ids_list
+
+
+def get_all_playlist_titles(session):
+    """Return a list of all the title values in the playlists table.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    """
+    titles = session.query(Playlist.title).all()
+    titles_list = [title for (title,) in titles]
+    return titles_list
