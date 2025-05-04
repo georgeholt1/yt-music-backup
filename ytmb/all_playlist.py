@@ -1,5 +1,7 @@
 from ytmb.api_client import create_playlist
 
+YTMB_ALL_TITLE = "ytmb-all"
+
 
 def create_ytmb_all_playlist(playlists):
     """Create ytmb-all playlist if it doesn't exist.
@@ -15,18 +17,16 @@ def create_ytmb_all_playlist(playlists):
     str
         ID of playlist.
     """
-    ytmb_all_title = "ytmb-all"
-
     playlist_titles = [p["title"] for p in playlists]
 
-    if ytmb_all_title not in playlist_titles:
+    if YTMB_ALL_TITLE not in playlist_titles:
         playlist_id = create_playlist(
-            title=ytmb_all_title,
+            title=YTMB_ALL_TITLE,
             description="Playlist automatically created by YTMB",
         )
     else:
         playlist_id = next(
-            (p["playlistId"] for p in playlists if p["title"] == ytmb_all_title), None
+            (p["playlistId"] for p in playlists if p["title"] == YTMB_ALL_TITLE), None
         )
 
     return playlist_id
