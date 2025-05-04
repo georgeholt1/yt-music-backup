@@ -356,3 +356,28 @@ def get_all_playlist_titles(session):
     titles = session.query(Playlist.title).all()
     titles_list = [title for (title,) in titles]
     return titles_list
+
+
+def get_ytmusic_ids_for_playlist(session, playlist_name):
+    """Get ytmusic_id values of tracks in playlist.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    playlist_name : str
+
+    Returns
+    -------
+    list
+    """
+    ytmusic_ids = (
+        session.query(Track.ytmusic_id)
+        .join(PlaylistTrack, Track.id == PlaylistTrack.track_id)
+        .join(Playlist, Playlist.id == PlaylistTrack.playlist_id)
+        .filter(Playlist.title == playlist_name)
+        .all()
+    )
+
+    ytmusic_ids_list = [ytmusic_id for (ytmusic_id,) in ytmusic_ids]
+
+    return ytmusic_ids_list
