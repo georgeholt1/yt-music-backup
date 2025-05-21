@@ -1,11 +1,8 @@
 import argparse
 from tqdm import tqdm
 from ytmb.api_client import (
-    get_all_playlists,
+    get_library_state,
     get_playlist_tracks,
-    get_all_albums,
-    get_all_artists,
-    get_all_subscriptions,
 )
 from ytmb.all_playlist import handle_ytmb_all_playlist
 from ytmb.db import (
@@ -33,9 +30,10 @@ def main():
     initialize_database()
     session = Session()
 
-    print("Getting playlists")
-    playlists = get_all_playlists()
+    print("Getting YTMusic library")
+    playlists, all_albums, all_artists, all_subscriptions = get_library_state()
 
+    print("Storing playlists")
     playlists = store_playlists(session, playlists)
 
     print("Storing playlist tracks")
@@ -48,18 +46,15 @@ def main():
         for i, track in enumerate(tracks):
             store_track_from_playlist(session, playlist["playlist_table_id"], track, i)
 
-    print("Getting albums")
-    all_albums = get_all_albums()
+    print("Storing albums")
     for album in tqdm(all_albums):
         store_user_saved_album(session, album)
 
-    print("Getting artists")
-    all_artists = get_all_artists()
+    print("Storing artists")
     for artist in tqdm(all_artists):
         store_artist_from_artist_data(session, artist)
 
-    print("Getting subscriptions")
-    all_subscriptions = get_all_subscriptions()
+    print("Storing subscriptions")
     for subscription in tqdm(all_subscriptions):
         if subscription["type"] == "artist":
             store_artist_from_artist_data(session, subscription, user_saved=True)
