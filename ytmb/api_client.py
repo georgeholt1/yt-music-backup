@@ -9,6 +9,14 @@ ytmusic = YTMusic(
 )
 
 
+def get_library_state():
+    playlists = get_all_playlists()
+    albums = get_all_albums()
+    artists = get_all_artists()
+    subscriptions = get_all_subscriptions()
+    return playlists, albums, artists, subscriptions
+
+
 def get_all_playlists():
     return ytmusic.get_library_playlists(limit=None)
 
