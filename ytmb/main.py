@@ -40,6 +40,8 @@ def main():
 
     print("Storing playlist tracks")
     for playlist in tqdm(playlists):
+        if playlist["name"] == "ytmb-all":
+            continue
         tracks = get_playlist_tracks(playlist["ytmusic_id"])
         store_artists_from_tracks(session, tracks)
         store_albums_from_tracks(session, tracks)
