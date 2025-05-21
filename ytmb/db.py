@@ -381,3 +381,42 @@ def get_ytmusic_ids_for_playlist(session, playlist_name):
     ytmusic_ids_list = [ytmusic_id for (ytmusic_id,) in ytmusic_ids]
 
     return ytmusic_ids_list
+
+
+def identify_playlists_to_remove(session, library_playlists):
+    """
+    Compare a list of playlists to the list of playlists in the database and return the
+    difference.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    library_playlists : list of dicts
+        List of library dictionaries. Each dict should have "name" key.
+
+    Returns
+    -------
+    set
+        The set of playlists in the database that are not in `library_playlists`.
+    """
+    library_playlist_titles = {p["name"] for p in library_playlists}
+    db_playlist_titles = set(get_all_playlist_titles(session))
+
+    playlists_to_remove = db_playlist_titles - library_playlist_titles
+    return playlists_to_remove
+
+
+def remove_playlists(session, playlists_to_remove):
+    """Remove playlists from the database.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    playlists_to_remove : list
+        List of playlist titles to remove from the database.
+    """
+    for title in playlists_to_remove:
+        playlist = session.query(Playlist).filter_by(title=title).first()
+        if playlist:
+            session.delete(playlist)
+    session.commit()

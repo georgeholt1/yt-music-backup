@@ -7,7 +7,9 @@ from ytmb.api_client import (
 from ytmb.all_playlist import handle_ytmb_all_playlist
 from ytmb.db import (
     Session,
+    identify_playlists_to_remove,
     initialize_database,
+    remove_playlists,
     store_playlists,
     store_track_from_playlist,
     store_user_saved_album,
@@ -62,6 +64,11 @@ def main():
     if args.all_playlist:
         print("Handling all-playlist")
         handle_ytmb_all_playlist(playlists, session)
+
+    print("Cleaning up database")
+    playlists_to_remove = identify_playlists_to_remove(session, playlists)
+    print(playlists_to_remove)
+    remove_playlists(session, playlists_to_remove)
 
     session.close()
 
