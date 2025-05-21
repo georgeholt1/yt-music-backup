@@ -1,4 +1,5 @@
 import os
+from sys import exit
 
 try:
     DB_URI = os.environ["DB_URI"]
