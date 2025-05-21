@@ -6,6 +6,8 @@ oauth.json
 
 test.ipynb
 
+output.txt
+
 .env
 ytmb.db
 ytmb.backup.db
