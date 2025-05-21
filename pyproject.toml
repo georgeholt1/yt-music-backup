@@ -16,6 +16,7 @@ tqdm = "^4.67.1"
 pre-commit = "^4.1.0"
 notebook = "^7.3.2"
 ruff = "0.9.4"
+repo2txt = "^0.1.6"
 
 [tool.poetry.scripts]
 ytmb = "ytmb.main:main"
