@@ -38,10 +38,13 @@ def main():
     initialize_database()
     session = Session()
 
-    print("Getting YTMusic library")
+    pbar = tqdm(total=8)
+
+    pbar.set_description("Getting YTMusic library")
     playlists, library_albums, library_artists, library_subscriptions = (
         get_library_state()
     )
+    pbar.update()
     all_artist_names = set.union(
         set([a["artist"] for a in library_artists]),
         set([a["artist"] for a in library_subscriptions]),
@@ -50,11 +53,14 @@ def main():
 
     all_track_titles = []
 
-    print("Storing playlists")
+    pbar.set_description("Storing playlists")
     playlists = store_playlists(session, playlists)
+    pbar.update()
 
-    print("Storing playlist tracks")
-    for playlist in tqdm(playlists):
+    pbar.set_description("Storing playlist tracks")
+    pbar_playlists = tqdm(playlists, position=1, leave=False)
+    for playlist in pbar_playlists:
+        pbar_playlists.set_description(playlist["name"])
         if playlist["name"] == "ytmb-all":
             continue
 
@@ -67,27 +73,33 @@ def main():
         albums = store_albums_from_tracks(session, tracks)
         all_album_names = set(all_album_names).union(albums)
 
-        for i, track in enumerate(tracks):
+        for i, track in enumerate(tqdm(tracks, position=2, leave=False, desc="Tracks")):
             store_track_from_playlist(session, playlist["playlist_table_id"], track, i)
 
-    print("Storing albums")
-    for album in tqdm(library_albums):
+    pbar.update()
+
+    pbar.set_description("Storing albums")
+    for album in tqdm(library_albums, position=1, leave=False):
         store_user_saved_album(session, album)
+    pbar.update()
 
-    print("Storing artists")
-    for artist in tqdm(library_artists):
+    pbar.set_description("Storing artists")
+    for artist in tqdm(library_artists, position=1, leave=False):
         store_artist_from_artist_data(session, artist)
+    pbar.update()
 
-    print("Storing subscriptions")
-    for subscription in tqdm(library_subscriptions):
+    pbar.set_description("Storing subscriptions")
+    for subscription in tqdm(library_subscriptions, position=1, leave=False):
         if subscription["type"] == "artist":
             store_artist_from_artist_data(session, subscription, user_saved=True)
+    pbar.update()
 
     if args.all_playlist:
-        print("Handling all-playlist")
+        pbar.set_description("Handling all-playlist")
         handle_ytmb_all_playlist(playlists, session)
+    pbar.update()
 
-    print("Cleaning up database")
+    pbar.set_description("Cleaning up database")
     playlists_to_remove = identify_playlists_to_remove(session, playlists)
     remove_playlists(session, playlists_to_remove)
     artists_to_remove = identify_artists_to_remove(session, all_artist_names)
@@ -96,8 +108,11 @@ def main():
     remove_albums(session, albums_to_remove)
     tracks_to_remove = identify_tracks_to_remove(session, all_track_titles)
     remove_tracks(session, tracks_to_remove)
+    pbar.update()
 
     session.close()
+
+    pbar.close()
 
     print("Done")
 
