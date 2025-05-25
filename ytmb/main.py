@@ -7,8 +7,10 @@ from ytmb.api_client import (
 from ytmb.all_playlist import handle_ytmb_all_playlist
 from ytmb.db import (
     Session,
+    identify_artists_to_remove,
     identify_playlists_to_remove,
     initialize_database,
+    remove_artists,
     remove_playlists,
     store_playlists,
     store_track_from_playlist,
@@ -33,7 +35,13 @@ def main():
     session = Session()
 
     print("Getting YTMusic library")
-    playlists, all_albums, all_artists, all_subscriptions = get_library_state()
+    playlists, library_albums, library_artists, library_subscriptions = (
+        get_library_state()
+    )
+    all_artist_names = set.union(
+        set([a["artist"] for a in library_artists]),
+        set([a["artist"] for a in library_subscriptions]),
+    )
 
     print("Storing playlists")
     playlists = store_playlists(session, playlists)
@@ -43,21 +51,22 @@ def main():
         if playlist["name"] == "ytmb-all":
             continue
         tracks = get_playlist_tracks(playlist["ytmusic_id"])
-        store_artists_from_tracks(session, tracks)
+        artists = store_artists_from_tracks(session, tracks)
+        all_artist_names = set(all_artist_names).union(artists)
         store_albums_from_tracks(session, tracks)
         for i, track in enumerate(tracks):
             store_track_from_playlist(session, playlist["playlist_table_id"], track, i)
 
     print("Storing albums")
-    for album in tqdm(all_albums):
+    for album in tqdm(library_albums):
         store_user_saved_album(session, album)
 
     print("Storing artists")
-    for artist in tqdm(all_artists):
+    for artist in tqdm(library_artists):
         store_artist_from_artist_data(session, artist)
 
     print("Storing subscriptions")
-    for subscription in tqdm(all_subscriptions):
+    for subscription in tqdm(library_subscriptions):
         if subscription["type"] == "artist":
             store_artist_from_artist_data(session, subscription, user_saved=True)
 
@@ -67,8 +76,9 @@ def main():
 
     print("Cleaning up database")
     playlists_to_remove = identify_playlists_to_remove(session, playlists)
-    print(playlists_to_remove)
     remove_playlists(session, playlists_to_remove)
+    artists_to_remove = identify_artists_to_remove(session, all_artist_names)
+    remove_artists(session, artists_to_remove)
 
     session.close()
 
