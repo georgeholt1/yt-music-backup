@@ -7,9 +7,11 @@ from ytmb.api_client import (
 from ytmb.all_playlist import handle_ytmb_all_playlist
 from ytmb.db import (
     Session,
+    identify_albums_to_remove,
     identify_artists_to_remove,
     identify_playlists_to_remove,
     initialize_database,
+    remove_albums,
     remove_artists,
     remove_playlists,
     store_playlists,
@@ -42,6 +44,7 @@ def main():
         set([a["artist"] for a in library_artists]),
         set([a["artist"] for a in library_subscriptions]),
     )
+    all_album_names = set([a["title"] for a in library_albums])
 
     print("Storing playlists")
     playlists = store_playlists(session, playlists)
@@ -53,7 +56,8 @@ def main():
         tracks = get_playlist_tracks(playlist["ytmusic_id"])
         artists = store_artists_from_tracks(session, tracks)
         all_artist_names = set(all_artist_names).union(artists)
-        store_albums_from_tracks(session, tracks)
+        albums = store_albums_from_tracks(session, tracks)
+        all_album_names = set(all_album_names).union(albums)
         for i, track in enumerate(tracks):
             store_track_from_playlist(session, playlist["playlist_table_id"], track, i)
 
@@ -79,6 +83,8 @@ def main():
     remove_playlists(session, playlists_to_remove)
     artists_to_remove = identify_artists_to_remove(session, all_artist_names)
     remove_artists(session, artists_to_remove)
+    albums_to_remove = identify_albums_to_remove(session, all_album_names)
+    remove_albums(session, albums_to_remove)
 
     session.close()
 

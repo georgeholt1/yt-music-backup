@@ -99,6 +99,11 @@ def store_albums_from_tracks(session, tracks):
     tracks : list
         List containing tracks. For example, returned by
         api_client.get_playlist_tracks.
+
+    Returns
+    -------
+    unique_albums : set
+        The set of unique albums in `tracks`.
     """
     unique_albums = {
         track["album"]["name"] for track in tracks if track.get("album") is not None
@@ -106,6 +111,8 @@ def store_albums_from_tracks(session, tracks):
 
     for album in unique_albums:
         store_album(session, album)
+
+    return unique_albums
 
 
 def store_album(session, album_name, user_saved=False):
@@ -378,6 +385,18 @@ def get_all_artist_names(session):
     return names_list
 
 
+def get_all_album_names(session):
+    """Return a list of all the name values in the albums table.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    """
+    names = session.query(Album.name).all()
+    names_list = [name for (name,) in names]
+    return names_list
+
+
 def get_ytmusic_ids_for_playlist(session, playlist_name):
     """Get ytmusic_id values of tracks in playlist.
 
@@ -421,7 +440,6 @@ def identify_playlists_to_remove(session, library_playlists):
     """
     library_playlist_titles = {p["name"] for p in library_playlists}
     db_playlist_titles = set(get_all_playlist_titles(session))
-
     playlists_to_remove = db_playlist_titles - library_playlist_titles
     return playlists_to_remove
 
@@ -475,4 +493,39 @@ def remove_artists(session, artists_to_remove):
         artist = session.query(Artist).filter_by(name=artist).first()
         if artist:
             session.delete(artist)
+    session.commit()
+
+
+def identify_albums_to_remove(session, library_albums):
+    """Compare a list of albums to the list of albums in the database and return the
+    difference.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    library_albums : list
+        List of library album names.
+
+    Returns
+    -------
+    albums_to_remove : set
+        The set of albums in the database that are not in `library_albums`."""
+    db_album_titles = set(get_all_album_names(session))
+    albums_to_remove = db_album_titles - library_albums
+    return albums_to_remove
+
+
+def remove_albums(session, albums_to_remove):
+    """Remove albums from the database.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    albums_to_remove : list
+        List of album names to remove from the database.
+    """
+    for album in albums_to_remove:
+        album = session.query(Album).filter_by(name=album).first()
+        if album:
+            session.delete(album)
     session.commit()
