@@ -397,6 +397,18 @@ def get_all_album_names(session):
     return names_list
 
 
+def get_all_track_names(session):
+    """Return a list of all the name values in the tracks table.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    """
+    names = session.query(Track.name).all()
+    names_list = [name for (name,) in names]
+    return names_list
+
+
 def get_ytmusic_ids_for_playlist(session, playlist_name):
     """Get ytmusic_id values of tracks in playlist.
 
@@ -509,7 +521,8 @@ def identify_albums_to_remove(session, library_albums):
     Returns
     -------
     albums_to_remove : set
-        The set of albums in the database that are not in `library_albums`."""
+        The set of albums in the database that are not in `library_albums`.
+    """
     db_album_titles = set(get_all_album_names(session))
     albums_to_remove = db_album_titles - library_albums
     return albums_to_remove
@@ -528,4 +541,41 @@ def remove_albums(session, albums_to_remove):
         album = session.query(Album).filter_by(name=album).first()
         if album:
             session.delete(album)
+    session.commit()
+
+
+def identify_tracks_to_remove(session, library_tracks):
+    """Compare a list of tracks in to the list of tracks in the database and return the
+    difference.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    library_tracks : list
+        List of library track names.
+
+    Returns
+    -------
+    tracks_to_remove : set
+        The set of tracks in the database that are not in `library_tracks`.
+    """
+    library_tracks = set(library_tracks)
+    db_track_titles = set(get_all_track_names(session))
+    tracks_to_remove = db_track_titles - library_tracks
+    return tracks_to_remove
+
+
+def remove_tracks(session, tracks_to_remove):
+    """Remove tracks from the database.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    tracks_to_remove : list
+        List of tracks to remove from the database.
+    """
+    for track in tracks_to_remove:
+        track = session.query(Track).filter_by(name=track).first()
+        if track:
+            session.delete(track)
     session.commit()
