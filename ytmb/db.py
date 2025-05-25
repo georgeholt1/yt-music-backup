@@ -358,6 +358,18 @@ def get_all_playlist_titles(session):
     return titles_list
 
 
+def get_all_artist_names(session):
+    """Return a list of all the name values in the artists table.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    """
+    names = session.query(Artist.name).all()
+    names_list = [name for (name,) in names]
+    return names_list
+
+
 def get_ytmusic_ids_for_playlist(session, playlist_name):
     """Get ytmusic_id values of tracks in playlist.
 
@@ -419,4 +431,40 @@ def remove_playlists(session, playlists_to_remove):
         playlist = session.query(Playlist).filter_by(title=title).first()
         if playlist:
             session.delete(playlist)
+    session.commit()
+
+
+def identify_artists_to_remove(session, library_artists):
+    """Compare a list of artists to the list of artists in the database and return the
+    difference.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    library_artists : list
+        List of library artist names.
+
+    Returns
+    -------
+    set
+        The set of artists in the database that are not in `library_artists`.
+    """
+    db_artist_names = set(get_all_artist_names(session))
+    artists_to_remove = db_artist_names - library_artists
+    return artists_to_remove
+
+
+def remove_artists(session, artists_to_remove):
+    """Remove artists from the database.
+
+    Parameters
+    ----------
+    session : sqlalchemy.orm.Session
+    artists_to_remove : list
+        List of artist names to remove from the database.
+    """
+    for artist in artists_to_remove:
+        artist = session.query(Artist).filter_by(name=artist).first()
+        if artist:
+            session.delete(artist)
     session.commit()
