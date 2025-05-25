@@ -10,10 +10,12 @@ from ytmb.db import (
     identify_albums_to_remove,
     identify_artists_to_remove,
     identify_playlists_to_remove,
+    identify_tracks_to_remove,
     initialize_database,
     remove_albums,
     remove_artists,
     remove_playlists,
+    remove_tracks,
     store_playlists,
     store_track_from_playlist,
     store_user_saved_album,
@@ -46,6 +48,8 @@ def main():
     )
     all_album_names = set([a["title"] for a in library_albums])
 
+    all_track_titles = []
+
     print("Storing playlists")
     playlists = store_playlists(session, playlists)
 
@@ -53,11 +57,16 @@ def main():
     for playlist in tqdm(playlists):
         if playlist["name"] == "ytmb-all":
             continue
+
         tracks = get_playlist_tracks(playlist["ytmusic_id"])
+        all_track_titles.extend([t["title"] for t in tracks])
+
         artists = store_artists_from_tracks(session, tracks)
         all_artist_names = set(all_artist_names).union(artists)
+
         albums = store_albums_from_tracks(session, tracks)
         all_album_names = set(all_album_names).union(albums)
+
         for i, track in enumerate(tracks):
             store_track_from_playlist(session, playlist["playlist_table_id"], track, i)
 
@@ -85,6 +94,8 @@ def main():
     remove_artists(session, artists_to_remove)
     albums_to_remove = identify_albums_to_remove(session, all_album_names)
     remove_albums(session, albums_to_remove)
+    tracks_to_remove = identify_tracks_to_remove(session, all_track_titles)
+    remove_tracks(session, tracks_to_remove)
 
     session.close()
 
