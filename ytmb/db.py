@@ -73,11 +73,19 @@ def store_artists_from_tracks(session, tracks):
     session : sqlalchemy.orm.Session
     tracks : list
         List containing tracks. For example, returned by
-        api_client.get_playlist_tracks."""
+        api_client.get_playlist_tracks.
+
+    Returns
+    -------
+    set
+        The set of unique artists in `tracks`.
+    """
     unique_artists = {artist["name"] for track in tracks for artist in track["artists"]}
 
     for artist in unique_artists:
         store_artist(session, artist)
+
+    return unique_artists
 
 
 def store_albums_from_tracks(session, tracks):
