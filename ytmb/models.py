@@ -12,7 +12,9 @@ class Artist(Base):
     name = Column(String, nullable=False)
     user_saved = Column(Boolean, nullable=False, default=False)
 
-    tracks = relationship("TrackArtist", back_populates="artist")
+    tracks = relationship(
+        "TrackArtist", back_populates="artist", cascade="all, delete-orphan"
+    )
 
 
 class Track(Base):
@@ -23,8 +25,12 @@ class Track(Base):
     ytmusic_id = Column(String, unique=True, nullable=False)
     album_id = Column(Integer, ForeignKey("albums.id"), nullable=False)
 
-    artists = relationship("TrackArtist", back_populates="track")
-    playlist_tracks = relationship("PlaylistTrack", back_populates="track")
+    artists = relationship(
+        "TrackArtist", back_populates="track", cascade="all, delete-orphan"
+    )
+    playlist_tracks = relationship(
+        "PlaylistTrack", back_populates="track", cascade="all, delete-orphan"
+    )
 
 
 class Album(Base):
@@ -34,7 +40,7 @@ class Album(Base):
     name = Column(String, nullable=False)
     user_saved = Column(Boolean, nullable=False, default=False)
 
-    tracks = relationship("Track", backref="album")
+    tracks = relationship("Track", backref="album", cascade="all, delete-orphan")
 
 
 class Playlist(Base):
@@ -43,7 +49,9 @@ class Playlist(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String, nullable=False)
 
-    playlist_tracks = relationship("PlaylistTrack", back_populates="playlist")
+    playlist_tracks = relationship(
+        "PlaylistTrack", back_populates="playlist", cascade="all, delete-orphan"
+    )
 
 
 class TrackArtist(Base):
