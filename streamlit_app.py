@@ -339,9 +339,9 @@ def show_tracks():
     if search_term:
         query = query.filter(Track.name.ilike(f"%{search_term}%"))
 
-    tracks = query.order_by(Track.name).limit(1000).all()  # Limit for performance
+    tracks = query.order_by(Track.name).all()
 
-    st.write(f"Showing {len(tracks)} tracks (limited to 1000 for performance)")
+    st.write(f"Showing {len(tracks)} tracks")
 
     if tracks:
         track_data = []
