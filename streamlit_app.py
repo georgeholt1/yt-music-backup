@@ -305,14 +305,29 @@ def show_albums():
     st.write(f"Found {len(albums)} albums")
 
     if albums:
-        album_data = [
-            {
-                "Name": album.name,
-                "User Saved": "✓" if album.user_saved else "",
-                "Track Count": len(album.tracks) if hasattr(album, "tracks") else 0,
-            }
-            for album in albums
-        ]
+        album_data = []
+        for album in albums:
+            # Get unique artists for this album
+            artists_query = (
+                session.query(Artist)
+                .join(TrackArtist, TrackArtist.artist_id == Artist.id)
+                .join(Track, Track.id == TrackArtist.track_id)
+                .filter(Track.album_id == album.id)
+                .distinct()
+                .order_by(Artist.name)
+            )
+
+            artists = artists_query.all()
+            artist_names = [artist.name for artist in artists]
+
+            album_data.append(
+                {
+                    "Name": album.name,
+                    "Artists": ", ".join(artist_names) if artist_names else "Unknown",
+                    "User Saved": "✓" if album.user_saved else "",
+                    "Track Count": len(album.tracks) if hasattr(album, "tracks") else 0,
+                }
+            )
 
         df = pd.DataFrame(album_data)
         st.dataframe(df, use_container_width=True)
