@@ -122,7 +122,160 @@ def show_artists():
         df = pd.DataFrame(artist_data)
         st.dataframe(df, use_container_width=True)
 
+        # Artist details section
+        if artists:
+            st.subheader("Artist Details")
+            selected_artist_name = st.selectbox(
+                "Select an artist to view details:",
+                options=[artist.name for artist in artists],
+                index=0,
+            )
+
+            if selected_artist_name:
+                selected_artist = next(
+                    artist for artist in artists if artist.name == selected_artist_name
+                )
+                show_artist_details(session, selected_artist)
+
     session.close()
+
+
+def show_artist_details(session, artist):
+    """Show detailed information for a selected artist"""
+
+    # Create tabs for tracks and albums
+    tab1, tab2 = st.tabs(["Tracks", "Albums"])
+
+    with tab1:
+        st.subheader(f"Tracks by {artist.name}")
+
+        # Get all tracks by this artist
+        track_artists = session.query(TrackArtist).filter_by(artist_id=artist.id).all()
+
+        if track_artists:
+            track_data = []
+            for ta in track_artists:
+                track = ta.track
+
+                # Get all artists for this track (for collaborations)
+                all_track_artists = (
+                    session.query(TrackArtist).filter_by(track_id=track.id).all()
+                )
+                all_artist_names = [ata.artist.name for ata in all_track_artists]
+
+                track_data.append(
+                    {
+                        "Track": track.name,
+                        "All Artists": ", ".join(all_artist_names),
+                        "Album": track.album.name if track.album else "",
+                        "YouTube Music ID": track.ytmusic_id,
+                    }
+                )
+
+            df_tracks = pd.DataFrame(track_data)
+            st.dataframe(df_tracks, use_container_width=True)
+            st.write(f"Total tracks: {len(track_data)}")
+        else:
+            st.info(f"No tracks found for {artist.name}")
+
+    with tab2:
+        st.subheader(f"Albums featuring {artist.name}")
+
+        # Get unique albums that contain tracks by this artist
+        albums_query = (
+            session.query(Album)
+            .join(Track, Track.album_id == Album.id)
+            .join(TrackArtist, TrackArtist.track_id == Track.id)
+            .filter(TrackArtist.artist_id == artist.id)
+            .distinct()
+            .order_by(Album.name)
+        )
+
+        albums = albums_query.all()
+
+        if albums:
+            album_data = []
+            for album in albums:
+                # Count tracks by this artist in this album
+                artist_tracks_in_album = (
+                    session.query(Track)
+                    .join(TrackArtist)
+                    .filter(Track.album_id == album.id)
+                    .filter(TrackArtist.artist_id == artist.id)
+                    .count()
+                )
+
+                # Total tracks in album
+                total_tracks_in_album = (
+                    session.query(Track).filter(Track.album_id == album.id).count()
+                )
+
+                album_data.append(
+                    {
+                        "Album": album.name,
+                        "Artist Tracks": artist_tracks_in_album,
+                        "Total Tracks": total_tracks_in_album,
+                        "User Saved": "✓" if album.user_saved else "",
+                    }
+                )
+
+            df_albums = pd.DataFrame(album_data)
+            st.dataframe(df_albums, use_container_width=True)
+            st.write(f"Total albums: {len(album_data)}")
+
+            # Show detailed album view
+            if albums:
+                st.subheader("Album Track Details")
+                selected_album_name = st.selectbox(
+                    f"Select an album to see {artist.name}'s tracks:",
+                    options=[album.name for album in albums],
+                    key="artist_album_select",
+                )
+
+                if selected_album_name:
+                    selected_album = next(
+                        album for album in albums if album.name == selected_album_name
+                    )
+
+                    # Get tracks by this artist in the selected album
+                    artist_album_tracks = (
+                        session.query(Track)
+                        .join(TrackArtist)
+                        .filter(Track.album_id == selected_album.id)
+                        .filter(TrackArtist.artist_id == artist.id)
+                        .order_by(Track.name)
+                        .all()
+                    )
+
+                    if artist_album_tracks:
+                        album_track_data = []
+                        for track in artist_album_tracks:
+                            # Get all artists for this track
+                            all_track_artists = (
+                                session.query(TrackArtist)
+                                .filter_by(track_id=track.id)
+                                .all()
+                            )
+                            all_artist_names = [
+                                ata.artist.name for ata in all_track_artists
+                            ]
+
+                            album_track_data.append(
+                                {
+                                    "Track": track.name,
+                                    "All Artists": ", ".join(all_artist_names),
+                                    "YouTube Music ID": track.ytmusic_id,
+                                }
+                            )
+
+                        df_album_tracks = pd.DataFrame(album_track_data)
+                        st.dataframe(df_album_tracks, use_container_width=True)
+                    else:
+                        st.info(
+                            f"No tracks by {artist.name} found in {selected_album_name}"
+                        )
+        else:
+            st.info(f"No albums found featuring {artist.name}")
 
 
 def show_albums():
