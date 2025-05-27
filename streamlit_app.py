@@ -6,7 +6,6 @@ from ytmb.config import DB_URI
 from ytmb.models import Artist, Track, Album, Playlist, TrackArtist, PlaylistTrack
 
 
-# Initialize database connection
 @st.cache_resource
 def init_db():
     engine = create_engine(DB_URI)
@@ -47,7 +46,6 @@ def show_overview():
 
     session = get_session()
 
-    # Get counts
     artist_count = session.query(Artist).count()
     track_count = session.query(Track).count()
     album_count = session.query(Album).count()
@@ -95,7 +93,6 @@ def show_artists():
     with col2:
         search_term = st.text_input("Search artists:", "")
 
-    # Query artists
     query = session.query(Artist)
 
     if show_user_saved:
@@ -106,7 +103,6 @@ def show_artists():
 
     artists = query.order_by(Artist.name).all()
 
-    # Display results
     st.write(f"Found {len(artists)} artists")
 
     if artists:
@@ -143,7 +139,6 @@ def show_artists():
 def show_artist_details(session, artist):
     """Show detailed information for a selected artist"""
 
-    # Create tabs for tracks and albums
     tab1, tab2 = st.tabs(["Tracks", "Albums"])
 
     with tab1:
@@ -283,14 +278,12 @@ def show_albums():
 
     session = get_session()
 
-    # Filters
     col1, col2 = st.columns(2)
     with col1:
         show_user_saved = st.checkbox("Show only user saved", False)
     with col2:
         search_term = st.text_input("Search albums:", "")
 
-    # Query albums
     query = session.query(Album)
 
     if show_user_saved:
@@ -301,7 +294,6 @@ def show_albums():
 
     albums = query.order_by(Album.name).all()
 
-    # Display results
     st.write(f"Found {len(albums)} albums")
 
     if albums:
@@ -340,10 +332,8 @@ def show_tracks():
 
     session = get_session()
 
-    # Search filter
     search_term = st.text_input("Search tracks:", "")
 
-    # Query tracks with related data
     query = session.query(Track).join(Album)
 
     if search_term:
@@ -351,7 +341,6 @@ def show_tracks():
 
     tracks = query.order_by(Track.name).limit(1000).all()  # Limit for performance
 
-    # Display results
     st.write(f"Showing {len(tracks)} tracks (limited to 1000 for performance)")
 
     if tracks:
@@ -383,10 +372,8 @@ def show_playlists():
 
     session = get_session()
 
-    # Search filter
     search_term = st.text_input("Search playlists:", "")
 
-    # Query playlists
     query = session.query(Playlist)
 
     if search_term:
@@ -394,7 +381,6 @@ def show_playlists():
 
     playlists = query.order_by(Playlist.title).all()
 
-    # Display results
     st.write(f"Found {len(playlists)} playlists")
 
     if playlists:
